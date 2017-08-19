@@ -27,7 +27,6 @@ public class ZipMerge {
     private int confirmflags;
     private int nameflags;
     
-
     // copy input to output stream   
     public void copy(InputStream input, OutputStream output) throws IOException {
         int bytesRead;
