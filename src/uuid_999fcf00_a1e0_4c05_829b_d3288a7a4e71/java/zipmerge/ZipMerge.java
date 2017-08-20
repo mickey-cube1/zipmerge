@@ -14,52 +14,57 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 public class ZipMerge {
-	private static int FLAG_ALL_YES  = 0x01;
-	private static int FLAG_ALL_NO   = 0x02;
+	private static int FLAG_ALL_YES = 0x01;
+	private static int FLAG_ALL_NO = 0x02;
 	private static int FLAG_SAME_YES = 0x04;
-	private static int FLAG_SAME_NO  = 0x08;
+	private static int FLAG_SAME_NO = 0x08;
 	private static int FLAG_SKIP_DIR = 0x01;
 	private static int FLAG_IGNORE_CASE = 0x02;
 
-    // 4MB buffer
-    private final byte[] BUFFER = new byte[4096 * 1024];
-    private int verboselevel;
-    private int confirmflags;
-    private int nameflags;
-    
-    // copy input to output stream   
-    public void copy(InputStream input, OutputStream output) throws IOException {
-        int bytesRead;
-        while ((bytesRead = input.read(BUFFER))!= -1) {
-            output.write(BUFFER, 0, bytesRead);
-        }
-    }
-    /*
-     * @param outzippath
-     * @param inzippath
-     */
-    public ZipMerge(int vlevel, int cmode, int nflags) {
-    	this.verboselevel = vlevel;
-    	this.confirmflags = cmode;
-    	this.nameflags = nflags;
-    }
-    /*
-     * @param outzippath
-     * @param inzippath
-     */
-	private int confirmReplace(ZipEntryEx za, String sa, ZipEntryEx zb, String sb)
-	{
+	// 4MB buffer
+	private final byte[] BUFFER = new byte[4096 * 1024];
+	private int verboselevel;
+	private int confirmflags;
+	private int nameflags;
+
+	// copy input to output stream
+	public void copy(InputStream input, OutputStream output) throws IOException {
+		int bytesRead;
+		while ((bytesRead = input.read(BUFFER)) != -1) {
+			output.write(BUFFER, 0, bytesRead);
+		}
+	}
+
+	/*
+	 * @param outzippath
+	 * 
+	 * @param inzippath
+	 */
+	public ZipMerge(int vlevel, int cmode, int nflags) {
+		this.verboselevel = vlevel;
+		this.confirmflags = cmode;
+		this.nameflags = nflags;
+	}
+
+	/*
+	 * @param outzippath
+	 * 
+	 * @param inzippath
+	 */
+	private int confirmReplace(ZipEntryEx za, String sa, ZipEntryEx zb,
+			String sb) {
 		Date da = new Date(za.zentry.getTime());
 		Date db = new Date(zb.zentry.getTime());
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 		if ((confirmflags & FLAG_ALL_YES) != 0) {
-        	return 1;
+			return 1;
 		} else if ((confirmflags & FLAG_ALL_NO) != 0) {
-        	return 0;
-        }
+			return 0;
+		}
 
-		if (za.zentry.getSize() == zb.zentry.getSize() && za.zentry.getCrc() == zb.zentry.getCrc()) {
+		if (za.zentry.getSize() == zb.zentry.getSize()
+				&& za.zentry.getCrc() == zb.zentry.getCrc()) {
 			if ((confirmflags & FLAG_SAME_YES) != 0) {
 				return 1;
 			} else if ((confirmflags & FLAG_SAME_NO) != 0) {
@@ -67,12 +72,14 @@ public class ZipMerge {
 			}
 		}
 
-		System.out.format("replace '%s':\n     %s %08x %8d  in  '%s'\nwith %s %08x %8d from '%s'? ",
-        		za.zentry.getName(),
-        		sdf.format(da), za.zentry.getCrc(), za.zentry.getSize(), sa,
-        		sdf.format(db), zb.zentry.getCrc(), zb.zentry.getSize(), sb);
+		System.out
+				.format("replace '%s':\n     %s %08x %8d  in  '%s'\nwith %s %08x %8d from '%s'? ",
+						za.zentry.getName(), sdf.format(da),
+						za.zentry.getCrc(), za.zentry.getSize(), sa,
+						sdf.format(db), zb.zentry.getCrc(),
+						zb.zentry.getSize(), sb);
 		System.out.flush();
-		
+
 		Scanner sc = new Scanner(System.in);
 		String line = sc.nextLine();
 		sc.close();
@@ -82,49 +89,52 @@ public class ZipMerge {
 		char c = line.charAt(0);
 
 		if (c == 'y' || c == 'Y') {
-            return 1;
-        }
+			return 1;
+		}
 
-        return 0;
-    }
-  
-    /*
-     * @param outzippath
-     * @param inzippath
-     */
-    public void merge(String outzippath, String[] inzippath) throws IOException {
-    	int i;
-    	ZipFile inZip;
-    	ZipEntryEx inEntry;
-    	ArrayList<ZipEntryEx> zea = new ArrayList<ZipEntryEx>(100);
-    	ArrayList<ZipFile> zfa = new ArrayList<ZipFile>(inzippath.length);
-    	printverbose(1, "Dst: " + outzippath);
-    	ZipOutputStream moddedZip = new ZipOutputStream(new FileOutputStream(outzippath));
+		return 0;
+	}
 
-    	for (i = 0 ; i < inzippath.length ; i++){
-    		printverbose(1, "Src" + i + ": " + inzippath[i]);
-    		inZip = new ZipFile(inzippath[i]);
-    		zfa.add(inZip);
-    		//
-    		Enumeration<? extends ZipEntry> entries = inZip.entries();
-    		while (entries.hasMoreElements()) {
-    			ZipEntry e = entries.nextElement();
-    			inEntry = new ZipEntryEx(e, i);
-    			
-    			int oi = zea.indexOf(inEntry);
-    			if (oi == -1){
-    				zea.add(inEntry);
-    			} else {
-    				ZipEntryEx oe = zea.get(oi);
-    				int chk = confirmReplace(oe, inzippath[oe.findex], inEntry, inzippath[i]);
-    				if (chk != 0) {
-    					zea.remove(oi);
-    					zea.add(inEntry);
-    				}
-    			}
-    		}
-    	}
-    	for (i = 0; i < zea.size(); i++) {
+	/*
+	 * @param outzippath
+	 * 
+	 * @param inzippath
+	 */
+	public void merge(String outzippath, String[] inzippath) throws IOException {
+		int i;
+		ZipFile inZip;
+		ZipEntryEx inEntry;
+		ArrayList<ZipEntryEx> zea = new ArrayList<ZipEntryEx>(100);
+		ArrayList<ZipFile> zfa = new ArrayList<ZipFile>(inzippath.length);
+		printverbose(1, "Dst: " + outzippath);
+		ZipOutputStream moddedZip = new ZipOutputStream(new FileOutputStream(
+				outzippath));
+
+		for (i = 0; i < inzippath.length; i++) {
+			printverbose(1, "Src" + i + ": " + inzippath[i]);
+			inZip = new ZipFile(inzippath[i]);
+			zfa.add(inZip);
+			//
+			Enumeration<? extends ZipEntry> entries = inZip.entries();
+			while (entries.hasMoreElements()) {
+				ZipEntry e = entries.nextElement();
+				inEntry = new ZipEntryEx(e, i);
+
+				int oi = zea.indexOf(inEntry);
+				if (oi == -1) {
+					zea.add(inEntry);
+				} else {
+					ZipEntryEx oe = zea.get(oi);
+					int chk = confirmReplace(oe, inzippath[oe.findex], inEntry,
+							inzippath[i]);
+					if (chk != 0) {
+						zea.remove(oi);
+						zea.add(inEntry);
+					}
+				}
+			}
+		}
+		for (i = 0; i < zea.size(); i++) {
 			ZipEntryEx eex = zea.get(i);
 			ZipEntry e = eex.zentry;
 			int sfi = eex.findex;
@@ -135,35 +145,36 @@ public class ZipMerge {
 				copy(zfa.get(sfi).getInputStream(e), moddedZip);
 			}
 			moddedZip.closeEntry();
-    	}
-    	for (i = 0 ; i < zfa.size() ; i++){
-    		printverbose(2, "Close Src" + i + ": " + inzippath[i]);
-    		zfa.get(i).close();
-    	}
+		}
+		for (i = 0; i < zfa.size(); i++) {
+			printverbose(2, "Close Src" + i + ": " + inzippath[i]);
+			zfa.get(i).close();
+		}
 
 		moddedZip.close();
-    }
+	}
 
 	private static void showusage() {
-    	System.out.print(
-    			"zipmerge by micky-cube1\n\n"
-    			+ "usage: java -jar zipmerge,jar [-DhIiSsVv] target-zip zip...\n"
-		    	+ "\n"
-				+ "  -h       display this help message\n"
-				+ "  -V       display version number\n"
-				+ "  -D       ignore directory component in file names\n"
-				+ "  -I       ignore case in file names\n"
-				+ "  -i       ask before overwriting files\n"
-				+ "  -S       don't overwrite identical files\n"
-				+ "  -s       overwrite identical files without asking\n"
-				+ "  -v       verbose mode\n"
-				+ "\n"
-				+ "Report bugs to <micky.cube1+github@gmail.com>.\n");
+		System.out
+				.print("zipmerge by micky-cube1\n\n"
+						+ "usage: java -jar zipmerge,jar [-DhIiSsVv] target-zip zip...\n"
+						+ "\n"
+						+ "  -h       display this help message\n"
+						+ "  -V       display version number\n"
+						+ "  -D       ignore directory component in file names\n"
+						+ "  -I       ignore case in file names\n"
+						+ "  -i       ask before overwriting files\n"
+						+ "  -S       don't overwrite identical files\n"
+						+ "  -s       overwrite identical files without asking\n"
+						+ "  -v       verbose mode\n" + "\n"
+						+ "Report bugs to <micky.cube1+github@gmail.com>.\n");
 	}
-    private void printverbose(int vlevel, String msg) {
-    	System.err.format("debug%d: %s\n", vlevel, msg);   	
-    }
-    /**
+
+	private void printverbose(int vlevel, String msg) {
+		System.err.format("debug%d: %s\n", vlevel, msg);
+	}
+
+	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
@@ -174,55 +185,56 @@ public class ZipMerge {
 		int nameflags = 0;
 		int verboselv = 0;
 
-	    while ((c=getopt.getopt()) != -1) {
-	        switch (c) {
-	        case 'D':
-	            nameflags |= FLAG_SKIP_DIR;
-	            break;
-	        case 'i':
-	            confirmflags &= ~FLAG_ALL_YES;
-	            break;
-	        case 'I':
-	            nameflags |= FLAG_IGNORE_CASE;
-	            break;
-	        case 's':
-	            confirmflags &= ~FLAG_SAME_NO;
-	            confirmflags |= FLAG_SAME_YES;
-	            break;
-	        case 'S':
-	            confirmflags &= ~FLAG_SAME_YES;
-	            confirmflags |= FLAG_SAME_NO;
-	            break;
+		while ((c = getopt.getopt()) != -1) {
+			switch (c) {
+			case 'D':
+				nameflags |= FLAG_SKIP_DIR;
+				break;
+			case 'i':
+				confirmflags &= ~FLAG_ALL_YES;
+				break;
+			case 'I':
+				nameflags |= FLAG_IGNORE_CASE;
+				break;
+			case 's':
+				confirmflags &= ~FLAG_SAME_NO;
+				confirmflags |= FLAG_SAME_YES;
+				break;
+			case 'S':
+				confirmflags &= ~FLAG_SAME_YES;
+				confirmflags |= FLAG_SAME_NO;
+				break;
 
-	        case 'h':
-	        	showusage();
-	           return;
-	        case 'V':
-	        	System.out.print(
-	        			"zipmerge version 0.0.20170814\n"
-	        			+ "Copyright (C) 2017 micky-cube1\n"
-	        			+ "zipmerge comes with ABSOLUTELY NO WARRANTY, to the extent permitted by law.\n");
-	           return;
-	           
-	        case 'v':
-	        	verboselv++;
-	        	break;
+			case 'h':
+				showusage();
+				return;
+			case 'V':
+				System.out
+						.print("zipmerge version 0.0.20170814\n"
+								+ "Copyright (C) 2017 micky-cube1\n"
+								+ "zipmerge comes with ABSOLUTELY NO WARRANTY, to the extent permitted by law.\n");
+				return;
 
-	        default:
-	        	showusage();
-	           return;
-	        }
-	    }
-	    
-	    optind = getopt.getOptind();
-	    if (args.length < optind+2) {
-	    	showusage();
-	        return;
-	    }
+			case 'v':
+				verboselv++;
+				break;
+
+			default:
+				showusage();
+				return;
+			}
+		}
+
+		optind = getopt.getOptind();
+		if (args.length < optind + 2) {
+			showusage();
+			return;
+		}
 
 		//
 		String path = args[optind];
-		String[] srczips = java.util.Arrays.copyOfRange(args, optind+1, args.length);
+		String[] srczips = java.util.Arrays.copyOfRange(args, optind + 1,
+				args.length);
 		try {
 			ZipMerge zm = new ZipMerge(verboselv, confirmflags, nameflags);
 			zm.merge(path, srczips);
@@ -234,7 +246,6 @@ public class ZipMerge {
 	}
 }
 /*
- * ZipMerge.java
- * zipmerge : copyright (c) 2017 micky-cube1.
- * This software is released under the MIT License.
+ * ZipMerge.java zipmerge : copyright (c) 2017 micky-cube1. This software is
+ * released under the MIT License.
  */
