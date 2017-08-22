@@ -171,7 +171,9 @@ public class ZipMerge {
 	}
 
 	private void printverbose(int vlevel, String msg) {
-		System.err.format("debug%d: %s\n", vlevel, msg);
+		if (verboselevel >= vlevel) {
+			System.err.format("debug%d: %s\n", vlevel, msg);
+		}
 	}
 
 	/**
