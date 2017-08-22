@@ -82,7 +82,6 @@ public class ZipMerge {
 
 		Scanner sc = new Scanner(System.in);
 		String line = sc.nextLine();
-		sc.close();
 		if (line.length() == 0) {
 			return 0;
 		}
