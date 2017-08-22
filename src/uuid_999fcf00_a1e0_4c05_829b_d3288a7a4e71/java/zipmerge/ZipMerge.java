@@ -25,7 +25,8 @@ public class ZipMerge {
 	private final byte[] BUFFER = new byte[4096 * 1024];
 	private int verboselevel;
 	private int confirmflags;
-	private int nameflags;
+	private boolean nameicaseflag;
+	private boolean skipdirflag;
 
 	// copy input to output stream
 	public void copy(InputStream input, OutputStream output) throws IOException {
@@ -40,10 +41,11 @@ public class ZipMerge {
 	 * 
 	 * @param inzippath
 	 */
-	public ZipMerge(int vlevel, int cmode, int nflags) {
+	public ZipMerge(int vlevel, int cmode, boolean nif, boolean sdf) {
 		this.verboselevel = vlevel;
 		this.confirmflags = cmode;
-		this.nameflags = nflags;
+		this.nameicaseflag = nif;
+		this.skipdirflag = sdf;
 	}
 
 	/*
@@ -117,7 +119,7 @@ public class ZipMerge {
 			Enumeration<? extends ZipEntry> entries = inZip.entries();
 			while (entries.hasMoreElements()) {
 				ZipEntry e = entries.nextElement();
-				inEntry = new ZipEntryEx(e, i);
+				inEntry = new ZipEntryEx(e, i, nameicaseflag);
 
 				int oi = zea.indexOf(inEntry);
 				if (oi == -1) {
@@ -183,19 +185,20 @@ public class ZipMerge {
 		int c;
 		Getopt getopt = new Getopt(args, "hVDiIsSv");
 		int confirmflags = FLAG_ALL_YES;
-		int nameflags = 0;
+		boolean nameicaseflag = false;
+		boolean skipdirflag = false;
 		int verboselv = 0;
 
 		while ((c = getopt.getopt()) != -1) {
 			switch (c) {
 			case 'D':
-				nameflags |= FLAG_SKIP_DIR;
+				skipdirflag = true;
 				break;
 			case 'i':
 				confirmflags &= ~FLAG_ALL_YES;
 				break;
 			case 'I':
-				nameflags |= FLAG_IGNORE_CASE;
+				nameicaseflag = true;
 				break;
 			case 's':
 				confirmflags &= ~FLAG_SAME_NO;
@@ -237,7 +240,7 @@ public class ZipMerge {
 		String[] srczips = java.util.Arrays.copyOfRange(args, optind + 1,
 				args.length);
 		try {
-			ZipMerge zm = new ZipMerge(verboselv, confirmflags, nameflags);
+			ZipMerge zm = new ZipMerge(verboselv, confirmflags, nameicaseflag, skipdirflag);
 			zm.merge(path, srczips);
 		} catch (IOException e) {
 			// TODO 自動生成された catch ブロック
