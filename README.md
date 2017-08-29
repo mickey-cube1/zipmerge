@@ -4,7 +4,7 @@ zipmerge implemented in pure java.
 zipmerge makes some zip-files into one zip-file without decompressing and compressing.
 
 -----
-    zipmerge by micky-cube1
+    zipmerge by mickey-cube1
     
     usage: java -jar zipmerge.jar [-DhIiSsVv] target-zip zip...
     
@@ -17,5 +17,5 @@ zipmerge makes some zip-files into one zip-file without decompressing and compre
       -s       overwrite identical files without asking
       -v       verbose mode
     
-    Report bugs to <micky.cube1+github@gmail.com>
+    Report bugs to <mickey.cube1+github@gmail.com>
 -----

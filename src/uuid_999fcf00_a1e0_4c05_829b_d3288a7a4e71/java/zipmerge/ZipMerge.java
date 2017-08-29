@@ -18,8 +18,6 @@ public class ZipMerge {
 	private static int FLAG_ALL_NO = 0x02;
 	private static int FLAG_SAME_YES = 0x04;
 	private static int FLAG_SAME_NO = 0x08;
-	private static int FLAG_SKIP_DIR = 0x01;
-	private static int FLAG_IGNORE_CASE = 0x02;
 
 	// 4MB buffer
 	private final byte[] BUFFER = new byte[4096 * 1024];
