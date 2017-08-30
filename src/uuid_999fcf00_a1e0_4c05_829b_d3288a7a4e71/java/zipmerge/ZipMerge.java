@@ -4,6 +4,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -24,7 +25,7 @@ public class ZipMerge {
 	private int verboselevel;
 	private int confirmflags;
 	private boolean nameicaseflag;
-	private boolean skipdirflag;
+	private boolean ignoredirpartflag;
 
 	// copy input to output stream
 	public void copy(InputStream input, OutputStream output) throws IOException {
@@ -43,7 +44,7 @@ public class ZipMerge {
 		this.verboselevel = vlevel;
 		this.confirmflags = cmode;
 		this.nameicaseflag = nif;
-		this.skipdirflag = sdf;
+		this.ignoredirpartflag = sdf;
 	}
 
 	/*
@@ -117,8 +118,14 @@ public class ZipMerge {
 			Enumeration<? extends ZipEntry> entries = inZip.entries();
 			while (entries.hasMoreElements()) {
 				ZipEntry e = entries.nextElement();
-				inEntry = new ZipEntryEx(e, i, nameicaseflag);
 
+				String cname = e.getName();
+				if (ignoredirpartflag){
+					File tmpf = new File(cname);
+					cname = tmpf.getName();
+				}
+				
+				inEntry = new ZipEntryEx(cname, e, i, nameicaseflag);
 				int oi = zea.indexOf(inEntry);
 				if (oi == -1) {
 					zea.add(inEntry);

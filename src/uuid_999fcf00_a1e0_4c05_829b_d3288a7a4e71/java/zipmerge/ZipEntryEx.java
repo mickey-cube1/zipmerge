@@ -6,8 +6,10 @@ public class ZipEntryEx {
 	public ZipEntry zentry;
 	public int findex;
 	public boolean ignorecasef;
+	public String cname;
 
-	public ZipEntryEx(ZipEntry az, int ai, boolean ignf) {
+	public ZipEntryEx(String aCname, ZipEntry az, int ai, boolean ignf) {
+		this.cname = aCname;
 		this.zentry = az;
 		this.findex = ai;
 		this.ignorecasef = ignf;
@@ -15,8 +17,8 @@ public class ZipEntryEx {
 
 	public boolean equals(Object o) {
 		ZipEntryEx oe = (ZipEntryEx) o;
-		String an = zentry.getName();
-		String bn = oe.zentry.getName();
+		String an = cname;
+		String bn = oe.cname;
 		if (ignorecasef || oe.ignorecasef) {
 			return an.equalsIgnoreCase(bn);
 		} else {

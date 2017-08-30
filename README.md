@@ -10,8 +10,8 @@ zipmerge makes some zip-files into one zip-file without decompressing and compre
     
       -h       display this help message
       -V       display version number
-      -D       ignore directory component in file names
-      -I       ignore case in file names
+      -D       ignore directory component in file name comparisons
+      -I       ignore case in file name comparisons
       -i       ask before overwriting files
       -S       don't overwrite identical files
       -s       overwrite identical files without asking
